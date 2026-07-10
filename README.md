@@ -50,6 +50,11 @@ npm run build    # 프로덕션 빌드
 npm run preview  # 빌드 결과 미리보기
 ```
 
+## 배포
+
+`main` 브랜치에 푸시하면 GitHub Actions(`.github/workflows/deploy.yml`)가 빌드 후
+GitHub Pages로 자동 배포합니다. (저장소 Settings → Pages → Source: "GitHub Actions")
+
 ## 기술 스택
 
 - React + TypeScript + Vite
