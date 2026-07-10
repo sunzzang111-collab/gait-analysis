@@ -16,10 +16,11 @@ interface Props {
   model: PoseModel
   swapSides: boolean
   treadmill: boolean
+  treadmillSpeed: number
   captureImages: boolean
 }
 
-export function LiveCamera({ view, model, swapSides, treadmill, captureImages }: Props) {
+export function LiveCamera({ view, model, swapSides, treadmill, treadmillSpeed, captureImages }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [streaming, setStreaming] = useState(false)
@@ -69,7 +70,9 @@ export function LiveCamera({ view, model, swapSides, treadmill, captureImages }:
 
   const done = !recording && frames.length > 0
   const sagittalSummary =
-    done && view === 'sagittal' ? summarizeSagittal(frames, swapSides, { treadmill }) : null
+    done && view === 'sagittal'
+      ? summarizeSagittal(frames, swapSides, { treadmill, treadmillSpeedKmh: treadmillSpeed })
+      : null
   const frontalSummary = done && view === 'frontal' ? summarizeFrontal(frames, swapSides) : null
 
   return (

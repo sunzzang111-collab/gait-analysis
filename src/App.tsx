@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { LiveCamera } from './components/LiveCamera'
 import { VideoUpload } from './components/VideoUpload'
 import { ReferencesSection } from './components/ReferencesSection'
+import { ShootingGuide } from './components/ShootingGuide'
 import { useHospital } from './hooks/useHospital'
 import type { ViewMode } from './lib/rawFrame'
 import type { PoseModel } from './lib/pose'
@@ -20,6 +21,7 @@ function App() {
   const [model, setModel] = useState<PoseModel>('full')
   const [swapSides, setSwapSides] = useState(false)
   const [treadmill, setTreadmill] = useState(false)
+  const [treadmillSpeed, setTreadmillSpeed] = useState(4)
   const [captureImages, setCaptureImages] = useState(true)
   const [memo, setMemo] = useState('')
   const hospital = useHospital()
@@ -111,6 +113,8 @@ function App() {
         </button>
       </div>
 
+      <ShootingGuide view={view} />
+
       <div className="settings-row">
         <label>
           정밀도
@@ -121,8 +125,22 @@ function App() {
         </label>
         <label className="swap-toggle">
           <input type="checkbox" checked={treadmill} onChange={(e) => setTreadmill(e.target.checked)} />
-          러닝머신에서 촬영 (측면 보폭 측정 제외)
+          러닝머신에서 촬영
         </label>
+        {treadmill && (
+          <label>
+            벨트 속도
+            <input
+              type="number"
+              min={0}
+              step={0.1}
+              value={treadmillSpeed}
+              onChange={(e) => setTreadmillSpeed(Number(e.target.value))}
+              style={{ width: '68px' }}
+            />
+            km/h
+          </label>
+        )}
         <label className="swap-toggle">
           <input
             type="checkbox"
@@ -152,6 +170,7 @@ function App() {
             model={model}
             swapSides={swapSides}
             treadmill={treadmill}
+            treadmillSpeed={treadmillSpeed}
             captureImages={captureImages}
           />
         ) : (
@@ -160,6 +179,7 @@ function App() {
             model={model}
             swapSides={swapSides}
             treadmill={treadmill}
+            treadmillSpeed={treadmillSpeed}
             captureImages={captureImages}
           />
         )}

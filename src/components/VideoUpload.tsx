@@ -14,10 +14,11 @@ interface Props {
   model: PoseModel
   swapSides: boolean
   treadmill: boolean
+  treadmillSpeed: number
   captureImages: boolean
 }
 
-export function VideoUpload({ view, model, swapSides, treadmill, captureImages }: Props) {
+export function VideoUpload({ view, model, swapSides, treadmill, treadmillSpeed, captureImages }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [srcUrl, setSrcUrl] = useState<string | null>(null)
@@ -64,7 +65,9 @@ export function VideoUpload({ view, model, swapSides, treadmill, captureImages }
 
   const ready2 = done && frames.length > 0
   const sagittalSummary =
-    ready2 && view === 'sagittal' ? summarizeSagittal(frames, swapSides, { treadmill }) : null
+    ready2 && view === 'sagittal'
+      ? summarizeSagittal(frames, swapSides, { treadmill, treadmillSpeedKmh: treadmillSpeed })
+      : null
   const frontalSummary = ready2 && view === 'frontal' ? summarizeFrontal(frames, swapSides) : null
 
   return (

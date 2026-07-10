@@ -129,6 +129,12 @@ export interface GaitSummary {
   }
   /** False on a treadmill: optical step length is not measurable when the subject stays in place. */
   stepLengthMeasurable: boolean
+  /** Absolute step length (cm) derived from treadmill belt speed × step time; null otherwise. */
+  stepLengthCm: {
+    left: number | null
+    right: number | null
+    symmetryPct: number | null
+  } | null
   romSymmetryPct: {
     knee: number | null
     hip: number | null
@@ -171,6 +177,8 @@ function rangeOf(frames: GaitFrame[], pick: (a: JointAngles) => number): number 
 export interface SagittalOptions {
   /** On a treadmill the subject stays in place, so optical step length is suppressed. */
   treadmill?: boolean
+  /** Treadmill belt speed (km/h); enables speed-derived absolute step length. */
+  treadmillSpeedKmh?: number
 }
 
 export function summarize(frames: GaitFrame[], opts: SagittalOptions = {}): GaitSummary | null {
@@ -198,6 +206,20 @@ export function summarize(frames: GaitFrame[], opts: SagittalOptions = {}): Gait
   const relLeft = stepLengthMeasurable && leftStepDist != null ? leftStepDist / legScale : null
   const relRight = stepLengthMeasurable && rightStepDist != null ? rightStepDist / legScale : null
 
+  // On a treadmill, absolute step length = belt speed × step time.
+  // leftStepTimeSec / rightStepTimeSec are same-foot intervals (stride time);
+  // step length = ½ stride length = ½ · v · strideTime.
+  let stepLengthCm: GaitSummary['stepLengthCm'] = null
+  const speed = opts.treadmill ? opts.treadmillSpeedKmh : undefined
+  if (speed && speed > 0) {
+    const vMps = speed / 3.6
+    const toStepCm = (strideTime: number | null) =>
+      strideTime != null ? (vMps * strideTime) / 2 * 100 : null
+    const sl = toStepCm(leftStepTimeSec)
+    const sr = toStepCm(rightStepTimeSec)
+    stepLengthCm = { left: sl, right: sr, symmetryPct: symmetryPct(sl, sr) }
+  }
+
   const rom = {
     leftKnee: rangeOf(frames, (a) => a.leftKnee),
     rightKnee: rangeOf(frames, (a) => a.rightKnee),
@@ -221,6 +243,7 @@ export function summarize(frames: GaitFrame[], opts: SagittalOptions = {}): Gait
       symmetryPct: symmetryPct(relLeft, relRight),
     },
     stepLengthMeasurable,
+    stepLengthCm,
     romSymmetryPct: {
       knee: symmetryPct(rom.leftKnee, rom.rightKnee),
       hip: symmetryPct(rom.leftHip, rom.rightHip),

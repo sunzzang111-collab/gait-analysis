@@ -1,5 +1,6 @@
 import type { FrontalSummary } from '../lib/frontalMetrics'
 import { THRESHOLDS, type Threshold } from '../lib/references'
+import { RangeBar, lowerIsBetterStops } from './RangeBar'
 
 function fmtDeg(v: number | null): string {
   return v == null ? '측정 불가' : `${v.toFixed(1)}°`
@@ -26,6 +27,24 @@ function GradeTag({ th }: { th: Threshold }) {
   )
 }
 
+/** Card with the normal-range band for a threshold-based, lower-is-better metric. */
+function ThreshCard({ label, value, th }: { label: string; value: number | null; th: Threshold }) {
+  return (
+    <div className={`summary-card ${tone(value, th)}`}>
+      <span className="summary-card__label">
+        {label} <GradeTag th={th} />
+      </span>
+      <span className="summary-card__value">{fmtDeg(value)}</span>
+      <RangeBar
+        value={value}
+        max={th.max}
+        stops={lowerIsBetterStops(th.warn, th.bad, th.max)}
+        legend={`정상 <${th.warn}° · 주의 ${th.warn}–${th.bad}° · 확인 >${th.bad}°`}
+      />
+    </div>
+  )
+}
+
 export function FrontalReport({ summary }: { summary: FrontalSummary }) {
   const kv = THRESHOLDS.kneeValgus
   const rf = THRESHOLDS.rearfoot
@@ -38,45 +57,31 @@ export function FrontalReport({ summary }: { summary: FrontalSummary }) {
       <p className="hint">측정 시간 {summary.durationSec.toFixed(1)}초 · 값은 90퍼센타일(잡음 제거) 피크</p>
 
       <div className="summary-grid">
-        <div className={`summary-card ${tone(summary.peakValgus.left, kv)}`}>
-          <span className="summary-card__label">최대 무릎 외반 (좌) <GradeTag th={kv} /></span>
-          <span className="summary-card__value">{fmtDeg(summary.peakValgus.left)}</span>
-        </div>
-        <div className={`summary-card ${tone(summary.peakValgus.right, kv)}`}>
-          <span className="summary-card__label">최대 무릎 외반 (우) <GradeTag th={kv} /></span>
-          <span className="summary-card__value">{fmtDeg(summary.peakValgus.right)}</span>
-        </div>
+        <ThreshCard label="최대 무릎 외반 (좌)" value={summary.peakValgus.left} th={kv} />
+        <ThreshCard label="최대 무릎 외반 (우)" value={summary.peakValgus.right} th={kv} />
         <div className="summary-card">
           <span className="summary-card__label">무릎 외반 좌우차</span>
           <span className="summary-card__value">{fmtPct(summary.peakValgus.symmetryPct)}</span>
         </div>
 
-        <div className={`summary-card ${tone(summary.peakRearfoot.left, rf)}`}>
-          <span className="summary-card__label">최대 회내 (좌) <GradeTag th={rf} /></span>
-          <span className="summary-card__value">{fmtDeg(summary.peakRearfoot.left)}</span>
-        </div>
-        <div className={`summary-card ${tone(summary.peakRearfoot.right, rf)}`}>
-          <span className="summary-card__label">최대 회내 (우) <GradeTag th={rf} /></span>
-          <span className="summary-card__value">{fmtDeg(summary.peakRearfoot.right)}</span>
-        </div>
+        <ThreshCard label="최대 회내 (좌)" value={summary.peakRearfoot.left} th={rf} />
+        <ThreshCard label="최대 회내 (우)" value={summary.peakRearfoot.right} th={rf} />
         <div className="summary-card">
           <span className="summary-card__label">회내 좌우차</span>
           <span className="summary-card__value">{fmtPct(summary.peakRearfoot.symmetryPct)}</span>
         </div>
 
-        <div className={`summary-card ${tone(summary.pelvicDropPeak, pd)}`}>
-          <span className="summary-card__label">최대 골반 하강 <GradeTag th={pd} /></span>
-          <span className="summary-card__value">{fmtDeg(summary.pelvicDropPeak)}</span>
-        </div>
-        <div className={`summary-card ${tone(summary.trunkSwayRange, ts)}`}>
-          <span className="summary-card__label">몸통 측방 흔들림 (범위) <GradeTag th={ts} /></span>
-          <span className="summary-card__value">{fmtDeg(summary.trunkSwayRange)}</span>
-        </div>
+        <ThreshCard label="최대 골반 하강" value={summary.pelvicDropPeak} th={pd} />
+        <ThreshCard label="몸통 측방 흔들림 (범위)" value={summary.trunkSwayRange} th={ts} />
         <div className="summary-card">
           <span className="summary-card__label">보폭 간격 (어깨폭 대비)</span>
           <span className="summary-card__value">{fmtNum(summary.stepWidthRelMean)}</span>
         </div>
       </div>
+
+      <p className="hint" style={{ textAlign: 'left', marginTop: '6px' }}>
+        각 값 아래 막대는 정상(초록)·주의(노랑)·확인(빨강) 구간이며, 세로선이 측정값 위치입니다.
+      </p>
 
       <ul className="metric-notes">
         <li>{pd.note}</li>

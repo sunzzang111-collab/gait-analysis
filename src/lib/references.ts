@@ -80,6 +80,8 @@ export type EvidenceGrade = 'evidence' | 'heuristic'
 export interface Threshold {
   warn: number
   bad: number
+  /** Upper end of the range-bar scale for display (units of the metric). */
+  max: number
   refId: string
   grade: EvidenceGrade
   note: string
@@ -90,6 +92,7 @@ export const THRESHOLDS: Record<string, Threshold> = {
   pelvicDrop: {
     warn: 4,
     bad: 7,
+    max: 12,
     refId: 'bramah2018',
     grade: 'evidence',
     note: '달리기 기준 정상 ~3.7°, 손상군 ~6.4° (Bramah 2018). 연속적 위험도이며 확정 진단 컷오프가 아님.',
@@ -98,6 +101,7 @@ export const THRESHOLDS: Record<string, Threshold> = {
   kneeValgus: {
     warn: 8,
     bad: 12,
+    max: 20,
     refId: 'munro2011',
     grade: 'evidence',
     note: '2D FPPA 측정오차 SEM ~3°, 최소검출차 ~8° (Munro 2011). 8° 미만 차이는 측정 잡음 범위. 정상/손상 절대 컷오프는 근거가 약함.',
@@ -106,6 +110,7 @@ export const THRESHOLDS: Record<string, Threshold> = {
   rearfoot: {
     warn: 8,
     bad: 12,
+    max: 20,
     refId: 'zhang2017',
     grade: 'heuristic',
     note: '과회내 시 외반이 커진다는 방향성은 확립(Zhang 2017)되었으나 각도 컷오프는 문헌마다 상이. 2D 정면 촬영은 신뢰도 낮음 → 참고 지표.',
@@ -114,6 +119,7 @@ export const THRESHOLDS: Record<string, Threshold> = {
   trunkSway: {
     warn: 6,
     bad: 12,
+    max: 18,
     refId: 'bramah2018',
     grade: 'heuristic',
     note: '측방(횡단) 몸통 흔들림에 대한 검증된 임계값은 확인되지 않음(Bramah 2018은 전방 기울기를 측정). 아래 값은 임의 기준.',
@@ -122,6 +128,7 @@ export const THRESHOLDS: Record<string, Threshold> = {
   symmetry: {
     warn: 6,
     bad: 10,
+    max: 25,
     refId: 'herzog1989',
     grade: 'heuristic',
     note: '정상 보행 비대칭 ~4–6% (Herzog 1989). "10%" 기준은 관례일 뿐 검증된 컷오프 아님.',
@@ -132,6 +139,8 @@ export const THRESHOLDS: Record<string, Threshold> = {
 export const CADENCE = {
   normalLow: 100,
   normalHigh: 125,
+  min: 70,
+  max: 160,
   refId: 'tudorlocke2018',
   note: '성인 편안한 보행 ~100–125 steps/min, ≥100은 중강도 지표(Tudor-Locke 2018). 신장·속도에 크게 좌우되므로 이상 판별력은 약함.',
 }
