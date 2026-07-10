@@ -11,7 +11,7 @@ export interface RawFrame {
   lm: Landmark[]
 }
 
-export type ViewMode = 'sagittal' | 'frontal'
+export type ViewMode = 'sagittal' | 'frontal' | 'foot'
 
 /** Minimum landmark visibility to trust a measurement using it. */
 export const MIN_VISIBILITY = 0.5

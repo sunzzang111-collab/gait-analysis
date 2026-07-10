@@ -42,6 +42,27 @@ function FrontalDiagram() {
   )
 }
 
+/** Close-up rear framing of the feet / lower legs. */
+function FootDiagram() {
+  return (
+    <svg viewBox="0 0 260 140" className="guide__diagram" role="img" aria-label="근접 발 촬영 배치도">
+      <rect x="0" y="0" width="260" height="140" fill="#f8f9fb" rx="8" />
+      {/* framing box around feet */}
+      <rect x="150" y="34" width="86" height="72" rx="6" fill="none" stroke="#2563eb" strokeDasharray="5 4" strokeWidth="2" />
+      <text x="193" y="26" fontSize="10" fill="#2563eb" textAnchor="middle">프레임(발 위주)</text>
+      {/* two feet from behind */}
+      <ellipse cx="178" cy="86" rx="9" ry="15" fill="#2563eb" />
+      <ellipse cx="208" cy="86" rx="9" ry="15" fill="#2563eb" />
+      {/* camera behind, low */}
+      <rect x="181" y="116" width="24" height="14" rx="3" fill="#111827" />
+      <circle cx="193" cy="123" r="3.5" fill="#f8f9fb" />
+      <line x1="193" y1="116" x2="193" y2="104" stroke="#94a3b8" strokeWidth="1.5" strokeDasharray="3 3" />
+      <text x="70" y="66" fontSize="11" fill="#6b7280">발을 크게,</text>
+      <text x="70" y="82" fontSize="11" fill="#6b7280">골반 아래까지</text>
+    </svg>
+  )
+}
+
 const CONTENT: Record<
   ViewMode,
   { title: string; orientation: string; steps: string[]; measures: string }
@@ -68,13 +89,26 @@ const CONTENT: Record<
     ],
     measures: '분석 항목: 무릎 외반 · 회내 · 골반 하강 · 몸통 흔들림 (선별용 상대 지표)',
   },
+  foot: {
+    title: '근접 발 촬영 방법',
+    orientation: '📱 세로로, 발을 크게 — 발이 화면의 절반 이상을 차지하게',
+    steps: [
+      '카메라를 환자 뒤쪽 바닥 가까이 낮게 고정하고, 발과 발목이 크게 잡히도록 근접합니다.',
+      '검출이 되도록 최소한 골반 아래(허벅지~발)까지는 프레임에 들어오게 하세요.',
+      '러닝머신 위에서 제자리 걷기가 가장 안정적입니다(발이 계속 프레임 중앙).',
+      '맨발 또는 얇은 양말이 발뒤꿈치·발끝 인식에 유리합니다.',
+    ],
+    measures: '분석 항목: 발끝 방향(in/out-toeing) · 회내(발뒤꿈치 외반)',
+  },
 }
 
 export function ShootingGuide({ view }: { view: ViewMode }) {
   const c = CONTENT[view]
   return (
     <details className="guide" open>
-      <summary>촬영 방법 가이드 · {view === 'sagittal' ? '측면' : '후면/정면'}</summary>
+      <summary>
+        촬영 방법 가이드 · {view === 'sagittal' ? '측면' : view === 'frontal' ? '후면/정면' : '발(근접)'}
+      </summary>
       <div className="guide__body">
         <div className="guide__text">
           <strong>{c.title}</strong>
@@ -86,7 +120,13 @@ export function ShootingGuide({ view }: { view: ViewMode }) {
           </ol>
           <p className="hint guide__measures">{c.measures}</p>
         </div>
-        {view === 'sagittal' ? <SagittalDiagram /> : <FrontalDiagram />}
+        {view === 'sagittal' ? (
+          <SagittalDiagram />
+        ) : view === 'frontal' ? (
+          <FrontalDiagram />
+        ) : (
+          <FootDiagram />
+        )}
       </div>
     </details>
   )

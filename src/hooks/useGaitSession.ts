@@ -3,6 +3,7 @@ import { DrawingUtils, PoseLandmarker } from '@mediapipe/tasks-vision'
 import { getPoseLandmarker, type PoseModel } from '../lib/pose'
 import { computeJointAngles, type JointAngles } from '../lib/gaitMetrics'
 import { computeFrontalFrame, type FrontalFrame } from '../lib/frontalMetrics'
+import { computeFootFrame, type FootFrame } from '../lib/footMetrics'
 import type { Landmark, RawFrame, ViewMode } from '../lib/rawFrame'
 
 interface Options {
@@ -38,6 +39,7 @@ export function useGaitSession({
   const [ready, setReady] = useState(false)
   const [liveSagittal, setLiveSagittal] = useState<JointAngles | null>(null)
   const [liveFrontal, setLiveFrontal] = useState<FrontalFrame | null>(null)
+  const [liveFoot, setLiveFoot] = useState<FootFrame | null>(null)
   const framesRef = useRef<RawFrame[]>([])
   const [frameCount, setFrameCount] = useState(0)
   const recordStartRef = useRef<number | null>(null)
@@ -100,9 +102,12 @@ export function useGaitSession({
             if (view === 'sagittal') {
               const angles = computeJointAngles(lm, swapSides)
               if (angles) setLiveSagittal(angles)
-            } else {
+            } else if (view === 'frontal') {
               const ff = computeFrontalFrame(lm, t, swapSides)
               if (ff) setLiveFrontal(ff)
+            } else {
+              const foot = computeFootFrame(lm, swapSides)
+              if (foot) setLiveFoot(foot)
             }
 
             if (recording) {
@@ -146,6 +151,7 @@ export function useGaitSession({
     ready,
     liveSagittal,
     liveFrontal,
+    liveFoot,
     frames: framesRef.current,
     snapshots: snapshotsRef.current,
     frameCount,

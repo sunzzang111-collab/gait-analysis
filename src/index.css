@@ -326,6 +326,16 @@ input[type='file'] {
   gap: 10px;
 }
 
+.metrics-panel--4 {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+@media (max-width: 520px) {
+  .metrics-panel--4 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
 .metrics-panel__cell {
   background: var(--surface-2);
   border: 1px solid var(--border);

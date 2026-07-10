@@ -1,5 +1,6 @@
 import type { GaitSummary } from './gaitMetrics'
 import type { FrontalSummary } from './frontalMetrics'
+import type { FootSummary } from './footMetrics'
 import type { ViewMode } from './rawFrame'
 
 export interface Metric {
@@ -50,6 +51,15 @@ export function frontalMetricList(s: FrontalSummary): Metric[] {
     { label: '몸통 흔들림', value: s.trunkSwayRange, unit: '°', digits: 1 },
     { label: '발끝방향 좌', value: s.footProgression.left, unit: '°', digits: 0 },
     { label: '발끝방향 우', value: s.footProgression.right, unit: '°', digits: 0 },
+  ]
+}
+
+export function footMetricList(s: FootSummary): Metric[] {
+  return [
+    { label: '발끝방향 좌', value: s.footProgression.left, unit: '°', digits: 0 },
+    { label: '발끝방향 우', value: s.footProgression.right, unit: '°', digits: 0 },
+    { label: '회내 좌', value: s.eversion.left, unit: '°', digits: 1 },
+    { label: '회내 우', value: s.eversion.right, unit: '°', digits: 1 },
   ]
 }
 

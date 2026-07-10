@@ -3,13 +3,16 @@ import { VideoStage } from './VideoStage'
 import { useGaitSession } from '../hooks/useGaitSession'
 import { MetricsPanel } from './MetricsPanel'
 import { FrontalMetricsPanel } from './FrontalMetricsPanel'
+import { FootMetricsPanel } from './FootMetricsPanel'
 import { GaitCharts, GaitReport } from './GaitReport'
 import { FrontalReport } from './FrontalReport'
+import { FootReport } from './FootReport'
 import { CaptureStrip } from './CaptureStrip'
 import { SaveResultButton } from './SaveResultButton'
 import { buildSagittalFrames, summarizeSagittal } from '../lib/gaitMetrics'
 import { summarizeFrontal } from '../lib/frontalMetrics'
-import { frontalMetricList, sagittalMetrics, type RecordInput } from '../lib/records'
+import { summarizeFoot } from '../lib/footMetrics'
+import { footMetricList, frontalMetricList, sagittalMetrics, type RecordInput } from '../lib/records'
 import type { ViewMode } from '../lib/rawFrame'
 import type { PoseModel } from '../lib/pose'
 
@@ -40,7 +43,7 @@ export function LiveCamera({
   const [recording, setRecording] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const { ready, liveSagittal, liveFrontal, frames, snapshots, frameCount, resetFrames } =
+  const { ready, liveSagittal, liveFrontal, liveFoot, frames, snapshots, frameCount, resetFrames } =
     useGaitSession({
       videoRef,
       canvasRef,
@@ -87,6 +90,7 @@ export function LiveCamera({
       ? summarizeSagittal(frames, swapSides, { treadmill, treadmillSpeedKmh: treadmillSpeed })
       : null
   const frontalSummary = done && view === 'frontal' ? summarizeFrontal(frames, swapSides) : null
+  const footSummary = done && view === 'foot' ? summarizeFoot(frames, swapSides) : null
 
   return (
     <div className="panel">
@@ -108,6 +112,7 @@ export function LiveCamera({
       {!ready && <p className="hint">분석 모델을 불러오는 중입니다...</p>}
       {view === 'sagittal' && liveSagittal && <MetricsPanel angles={liveSagittal} />}
       {view === 'frontal' && liveFrontal && <FrontalMetricsPanel f={liveFrontal} />}
+      {view === 'foot' && liveFoot && <FootMetricsPanel f={liveFoot} />}
       {sagittalSummary && (
         <>
           <GaitReport frames={buildSagittalFrames(frames, swapSides)} summary={sagittalSummary} />
@@ -128,6 +133,15 @@ export function LiveCamera({
             onSave={() =>
               onSave({ memo, view, treadmill, metrics: frontalMetricList(frontalSummary) })
             }
+          />
+        </>
+      )}
+      {footSummary && (
+        <>
+          <FootReport summary={footSummary} />
+          <CaptureStrip snapshots={snapshots} />
+          <SaveResultButton
+            onSave={() => onSave({ memo, view, treadmill, metrics: footMetricList(footSummary) })}
           />
         </>
       )}

@@ -49,7 +49,7 @@ function App() {
           <span>보행 분석 결과 · 측정일시 {todayStr()}</span>
           {memo && <span>메모: {memo}</span>}
           <span>
-            촬영: {view === 'sagittal' ? '측면' : '후면/정면'}
+            촬영: {view === 'sagittal' ? '측면' : view === 'frontal' ? '후면/정면' : '발(근접)'}
             {treadmill ? ' · 러닝머신' : ''}
           </span>
         </div>
@@ -113,6 +113,9 @@ function App() {
         </button>
         <button className={view === 'frontal' ? 'active' : ''} onClick={() => setView('frontal')}>
           후면/정면
+        </button>
+        <button className={view === 'foot' ? 'active' : ''} onClick={() => setView('foot')}>
+          발(근접)
         </button>
       </div>
 

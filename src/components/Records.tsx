@@ -8,7 +8,7 @@ function fmtDate(iso: string): string {
 }
 
 function viewLabel(v: SavedRecord['view']): string {
-  return v === 'sagittal' ? '측면' : '후면'
+  return v === 'sagittal' ? '측면' : v === 'frontal' ? '후면' : '발'
 }
 
 function findMetric(list: Metric[], label: string): Metric | undefined {

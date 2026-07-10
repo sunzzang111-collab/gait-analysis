@@ -3,11 +3,13 @@ import { VideoStage } from './VideoStage'
 import { useGaitSession } from '../hooks/useGaitSession'
 import { GaitCharts, GaitReport } from './GaitReport'
 import { FrontalReport } from './FrontalReport'
+import { FootReport } from './FootReport'
 import { CaptureStrip } from './CaptureStrip'
 import { SaveResultButton } from './SaveResultButton'
 import { buildSagittalFrames, summarizeSagittal } from '../lib/gaitMetrics'
 import { summarizeFrontal } from '../lib/frontalMetrics'
-import { frontalMetricList, sagittalMetrics, type RecordInput } from '../lib/records'
+import { summarizeFoot } from '../lib/footMetrics'
+import { footMetricList, frontalMetricList, sagittalMetrics, type RecordInput } from '../lib/records'
 import type { ViewMode } from '../lib/rawFrame'
 import type { PoseModel } from '../lib/pose'
 
@@ -82,6 +84,7 @@ export function VideoUpload({
       ? summarizeSagittal(frames, swapSides, { treadmill, treadmillSpeedKmh: treadmillSpeed })
       : null
   const frontalSummary = ready2 && view === 'frontal' ? summarizeFrontal(frames, swapSides) : null
+  const footSummary = ready2 && view === 'foot' ? summarizeFoot(frames, swapSides) : null
 
   return (
     <div className="panel">
@@ -121,6 +124,15 @@ export function VideoUpload({
             onSave={() =>
               onSave({ memo, view, treadmill, metrics: frontalMetricList(frontalSummary) })
             }
+          />
+        </>
+      )}
+      {footSummary && (
+        <>
+          <FootReport summary={footSummary} />
+          <CaptureStrip snapshots={snapshots} />
+          <SaveResultButton
+            onSave={() => onSave({ memo, view, treadmill, metrics: footMetricList(footSummary) })}
           />
         </>
       )}
