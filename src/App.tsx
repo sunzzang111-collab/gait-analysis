@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { LiveCamera } from './components/LiveCamera'
 import { VideoUpload } from './components/VideoUpload'
 import { ReferencesSection } from './components/ReferencesSection'
+import { useHospital } from './hooks/useHospital'
 import type { ViewMode } from './lib/rawFrame'
 import type { PoseModel } from './lib/pose'
 
@@ -21,6 +22,7 @@ function App() {
   const [treadmill, setTreadmill] = useState(false)
   const [captureImages, setCaptureImages] = useState(true)
   const [memo, setMemo] = useState('')
+  const hospital = useHospital()
 
   return (
     <div className="app">
@@ -36,11 +38,51 @@ function App() {
 
       {/* Printed report header (visible only when printing / saving as PDF) */}
       <div className="print-header">
-        <strong>보행 분석 결과 (참고용)</strong>
-        <span>측정일시: {todayStr()}</span>
-        {memo && <span>메모: {memo}</span>}
-        <span>촬영: {view === 'sagittal' ? '측면' : '후면/정면'}{treadmill ? ' · 러닝머신' : ''}</span>
+        {hospital.logo && <img className="print-header__logo" src={hospital.logo} alt="병원 로고" />}
+        <div className="print-header__meta">
+          <strong>{hospital.name || '보행 분석 결과 (참고용)'}</strong>
+          <span>보행 분석 결과 · 측정일시 {todayStr()}</span>
+          {memo && <span>메모: {memo}</span>}
+          <span>
+            촬영: {view === 'sagittal' ? '측면' : '후면/정면'}
+            {treadmill ? ' · 러닝머신' : ''}
+          </span>
+        </div>
       </div>
+
+      {/* Hospital branding (empty by default; each clinic sets its own) */}
+      <details className="hospital">
+        <summary>병원 정보 · 로고 (결과지 상단에 표시)</summary>
+        <div className="hospital__body">
+          <label>
+            병원명
+            <input
+              type="text"
+              value={hospital.name}
+              placeholder="예: OO정형외과"
+              onChange={(e) => hospital.setName(e.target.value)}
+            />
+          </label>
+          <label>
+            로고 이미지
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => hospital.setLogoFile(e.target.files?.[0])}
+            />
+          </label>
+          {hospital.logo && (
+            <>
+              <img className="hospital__logo-preview" src={hospital.logo} alt="로고 미리보기" />
+              <button type="button" className="linkish" onClick={hospital.clearLogo}>
+                로고 삭제
+              </button>
+            </>
+          )}
+          {hospital.error && <span className="error">{hospital.error}</span>}
+          <span>브라우저에 저장되어 이 기기에서 계속 사용됩니다.</span>
+        </div>
+      </details>
 
       <nav className="mode-switch">
         <button className={mode === 'live' ? 'active' : ''} onClick={() => setMode('live')}>
