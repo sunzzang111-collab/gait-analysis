@@ -29,7 +29,7 @@ export function FootReport({ summary }: { summary: FootSummary }) {
   return (
     <div className="gait-report">
       <h3>근접 발 측정 결과</h3>
-      <p className="hint">발을 크게 담은 근접 후면 촬영 기준 · {summary.frameCount} 프레임</p>
+      <p className="hint">정강이~발 근접 촬영(러닝머신 권장) 기준 · {summary.frameCount} 프레임</p>
 
       <div className="summary-grid">
         <div className={`summary-card ${fpaTone(summary.footProgression.left)}`}>
