@@ -582,6 +582,64 @@ input[type='file'] {
   margin-top: 3px;
 }
 
+.capture-strip__placeholder {
+  border: 1px dashed var(--border-strong);
+  border-radius: 10px;
+  padding: 18px 14px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.8rem;
+  line-height: 1.6;
+  background: var(--surface-2);
+}
+
+/* Metric explainer (illustration + text) */
+.explainer {
+  margin-top: 6px;
+}
+
+.explainer h4 {
+  margin: 0 0 8px;
+  font-size: 0.88rem;
+  color: var(--text);
+}
+
+.explainer__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 12px;
+}
+
+.explainer__item {
+  margin: 0;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+
+.explainer__item svg {
+  width: 96px;
+  flex-shrink: 0;
+}
+
+.explainer__item figcaption {
+  font-size: 0.8rem;
+  line-height: 1.55;
+}
+
+.explainer__item figcaption strong {
+  display: block;
+  margin-bottom: 3px;
+}
+
+.explainer__item figcaption span {
+  color: var(--muted);
+}
+
 /* Saved records + comparison */
 .save-row {
   margin-top: 4px;

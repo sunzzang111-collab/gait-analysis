@@ -1,6 +1,7 @@
 import type { FootSummary } from '../lib/footMetrics'
 import { THRESHOLDS } from '../lib/references'
 import { RangeBar, lowerIsBetterStops } from './RangeBar'
+import { FootExplainer } from './FootExplainer'
 
 function fmtFPA(v: number | null): string {
   if (v == null) return '측정 불가'
@@ -92,6 +93,8 @@ export function FootReport({ summary }: { summary: FootSummary }) {
           </span>
         </div>
       </div>
+
+      <FootExplainer />
 
       <ul className="metric-notes">
         <li>발끝 방향(+바깥/−안쪽): 정상은 약간의 바깥 벌어짐(~7°). 안쪽(내족보행)이나 과도한 바깥은 확인.</li>
