@@ -5,6 +5,7 @@ import { MetricsPanel } from './MetricsPanel'
 import { FrontalMetricsPanel } from './FrontalMetricsPanel'
 import { GaitCharts, GaitReport } from './GaitReport'
 import { FrontalReport } from './FrontalReport'
+import { CaptureStrip } from './CaptureStrip'
 import { buildSagittalFrames, summarizeSagittal } from '../lib/gaitMetrics'
 import { summarizeFrontal } from '../lib/frontalMetrics'
 import type { ViewMode } from '../lib/rawFrame'
@@ -15,24 +16,27 @@ interface Props {
   model: PoseModel
   swapSides: boolean
   treadmill: boolean
+  captureImages: boolean
 }
 
-export function LiveCamera({ view, model, swapSides, treadmill }: Props) {
+export function LiveCamera({ view, model, swapSides, treadmill, captureImages }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [streaming, setStreaming] = useState(false)
   const [recording, setRecording] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const { ready, liveSagittal, liveFrontal, frames, frameCount, resetFrames } = useGaitSession({
-    videoRef,
-    canvasRef,
-    view,
-    model,
-    swapSides,
-    recording,
-    active: streaming,
-  })
+  const { ready, liveSagittal, liveFrontal, frames, snapshots, frameCount, resetFrames } =
+    useGaitSession({
+      videoRef,
+      canvasRef,
+      view,
+      model,
+      swapSides,
+      recording,
+      active: streaming,
+      captureImages,
+    })
 
   async function start() {
     try {
@@ -91,10 +95,16 @@ export function LiveCamera({ view, model, swapSides, treadmill }: Props) {
       {sagittalSummary && (
         <>
           <GaitReport frames={buildSagittalFrames(frames, swapSides)} summary={sagittalSummary} />
+          <CaptureStrip snapshots={snapshots} />
           <GaitCharts frames={buildSagittalFrames(frames, swapSides)} />
         </>
       )}
-      {frontalSummary && <FrontalReport summary={frontalSummary} />}
+      {frontalSummary && (
+        <>
+          <FrontalReport summary={frontalSummary} />
+          <CaptureStrip snapshots={snapshots} />
+        </>
+      )}
     </div>
   )
 }

@@ -19,6 +19,7 @@ function App() {
   const [model, setModel] = useState<PoseModel>('full')
   const [swapSides, setSwapSides] = useState(false)
   const [treadmill, setTreadmill] = useState(false)
+  const [captureImages, setCaptureImages] = useState(true)
   const [memo, setMemo] = useState('')
 
   return (
@@ -80,6 +81,14 @@ function App() {
           <input type="checkbox" checked={treadmill} onChange={(e) => setTreadmill(e.target.checked)} />
           러닝머신에서 촬영 (측면 보폭 측정 제외)
         </label>
+        <label className="swap-toggle">
+          <input
+            type="checkbox"
+            checked={captureImages}
+            onChange={(e) => setCaptureImages(e.target.checked)}
+          />
+          결과지에 분석 캡처 이미지 포함
+        </label>
         <label className="memo-field">
           환자 메모/ID
           <input
@@ -96,9 +105,21 @@ function App() {
 
       <main>
         {mode === 'live' ? (
-          <LiveCamera view={view} model={model} swapSides={swapSides} treadmill={treadmill} />
+          <LiveCamera
+            view={view}
+            model={model}
+            swapSides={swapSides}
+            treadmill={treadmill}
+            captureImages={captureImages}
+          />
         ) : (
-          <VideoUpload view={view} model={model} swapSides={swapSides} treadmill={treadmill} />
+          <VideoUpload
+            view={view}
+            model={model}
+            swapSides={swapSides}
+            treadmill={treadmill}
+            captureImages={captureImages}
+          />
         )}
       </main>
 

@@ -3,6 +3,7 @@ import { VideoStage } from './VideoStage'
 import { useGaitSession } from '../hooks/useGaitSession'
 import { GaitCharts, GaitReport } from './GaitReport'
 import { FrontalReport } from './FrontalReport'
+import { CaptureStrip } from './CaptureStrip'
 import { buildSagittalFrames, summarizeSagittal } from '../lib/gaitMetrics'
 import { summarizeFrontal } from '../lib/frontalMetrics'
 import type { ViewMode } from '../lib/rawFrame'
@@ -13,9 +14,10 @@ interface Props {
   model: PoseModel
   swapSides: boolean
   treadmill: boolean
+  captureImages: boolean
 }
 
-export function VideoUpload({ view, model, swapSides, treadmill }: Props) {
+export function VideoUpload({ view, model, swapSides, treadmill, captureImages }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [srcUrl, setSrcUrl] = useState<string | null>(null)
@@ -23,7 +25,7 @@ export function VideoUpload({ view, model, swapSides, treadmill }: Props) {
   const [recording, setRecording] = useState(false)
   const [done, setDone] = useState(false)
 
-  const { ready, frames, resetFrames } = useGaitSession({
+  const { ready, frames, snapshots, resetFrames } = useGaitSession({
     videoRef,
     canvasRef,
     view,
@@ -31,6 +33,7 @@ export function VideoUpload({ view, model, swapSides, treadmill }: Props) {
     swapSides,
     recording,
     active: playing,
+    captureImages,
   })
 
   function onFile(e: React.ChangeEvent<HTMLInputElement>) {
@@ -85,10 +88,16 @@ export function VideoUpload({ view, model, swapSides, treadmill }: Props) {
       {sagittalSummary && (
         <>
           <GaitReport frames={buildSagittalFrames(frames, swapSides)} summary={sagittalSummary} />
+          <CaptureStrip snapshots={snapshots} />
           <GaitCharts frames={buildSagittalFrames(frames, swapSides)} />
         </>
       )}
-      {frontalSummary && <FrontalReport summary={frontalSummary} />}
+      {frontalSummary && (
+        <>
+          <FrontalReport summary={frontalSummary} />
+          <CaptureStrip snapshots={snapshots} />
+        </>
+      )}
     </div>
   )
 }

@@ -339,6 +339,41 @@ button:disabled {
   margin-bottom: 3px;
 }
 
+/* Capture strip — annotated frames included in the report */
+.capture-strip {
+  margin-top: 4px;
+}
+
+.capture-strip h4 {
+  margin: 0 0 8px;
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+.capture-strip__row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 8px;
+}
+
+.capture-strip__item {
+  margin: 0;
+}
+
+.capture-strip__item img {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  display: block;
+}
+
+.capture-strip__item figcaption {
+  font-size: 0.72rem;
+  color: var(--muted);
+  text-align: center;
+  margin-top: 2px;
+}
+
 /* References / limitations */
 .references {
   margin-top: 20px;

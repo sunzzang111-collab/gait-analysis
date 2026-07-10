@@ -18,7 +18,12 @@ interface Options {
   recording: boolean
   /** Whether the video source is actively producing frames. */
   active: boolean
+  /** Capture representative annotated frames (video + skeleton) for the report. */
+  captureImages: boolean
 }
+
+const SNAPSHOT_INTERVAL_SEC = 0.8
+const MAX_SNAPSHOTS = 30
 
 export function useGaitSession({
   videoRef,
@@ -28,6 +33,7 @@ export function useGaitSession({
   swapSides,
   recording,
   active,
+  captureImages,
 }: Options) {
   const [ready, setReady] = useState(false)
   const [liveSagittal, setLiveSagittal] = useState<JointAngles | null>(null)
@@ -36,10 +42,16 @@ export function useGaitSession({
   const [frameCount, setFrameCount] = useState(0)
   const recordStartRef = useRef<number | null>(null)
   const rafRef = useRef<number | null>(null)
+  // Annotated snapshots (JPEG data URLs) captured during recording.
+  const snapshotsRef = useRef<string[]>([])
+  const lastSnapRef = useRef<number>(-Infinity)
+  const snapCanvasRef = useRef<HTMLCanvasElement | null>(null)
 
   const resetFrames = useCallback(() => {
     framesRef.current = []
     recordStartRef.current = null
+    snapshotsRef.current = []
+    lastSnapRef.current = -Infinity
     setFrameCount(0)
   }, [])
 
@@ -96,6 +108,25 @@ export function useGaitSession({
             if (recording) {
               framesRef.current.push({ t, lm })
               setFrameCount(framesRef.current.length)
+
+              // Composite the video frame + skeleton overlay into a snapshot.
+              if (
+                captureImages &&
+                snapshotsRef.current.length < MAX_SNAPSHOTS &&
+                t - lastSnapRef.current >= SNAPSHOT_INTERVAL_SEC
+              ) {
+                const snap = snapCanvasRef.current ?? document.createElement('canvas')
+                snapCanvasRef.current = snap
+                snap.width = video.videoWidth
+                snap.height = video.videoHeight
+                const sctx = snap.getContext('2d')
+                if (sctx) {
+                  sctx.drawImage(video, 0, 0, snap.width, snap.height)
+                  sctx.drawImage(canvas, 0, 0, snap.width, snap.height)
+                  snapshotsRef.current.push(snap.toDataURL('image/jpeg', 0.7))
+                  lastSnapRef.current = t
+                }
+              }
             }
           }
           ctx.restore()
@@ -109,13 +140,14 @@ export function useGaitSession({
       stopped = true
       if (rafRef.current) cancelAnimationFrame(rafRef.current)
     }
-  }, [ready, active, recording, view, model, swapSides, videoRef, canvasRef])
+  }, [ready, active, recording, view, model, swapSides, captureImages, videoRef, canvasRef])
 
   return {
     ready,
     liveSagittal,
     liveFrontal,
     frames: framesRef.current,
+    snapshots: snapshotsRef.current,
     frameCount,
     resetFrames,
   }
