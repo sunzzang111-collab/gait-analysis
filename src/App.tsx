@@ -3,7 +3,9 @@ import { LiveCamera } from './components/LiveCamera'
 import { VideoUpload } from './components/VideoUpload'
 import { ReferencesSection } from './components/ReferencesSection'
 import { ShootingGuide } from './components/ShootingGuide'
+import { Records } from './components/Records'
 import { useHospital } from './hooks/useHospital'
+import { useRecords } from './hooks/useRecords'
 import type { ViewMode } from './lib/rawFrame'
 import type { PoseModel } from './lib/pose'
 
@@ -25,6 +27,7 @@ function App() {
   const [captureImages, setCaptureImages] = useState(true)
   const [memo, setMemo] = useState('')
   const hospital = useHospital()
+  const records = useRecords()
 
   return (
     <div className="app">
@@ -172,6 +175,8 @@ function App() {
             treadmill={treadmill}
             treadmillSpeed={treadmillSpeed}
             captureImages={captureImages}
+            memo={memo}
+            onSave={records.add}
           />
         ) : (
           <VideoUpload
@@ -181,25 +186,18 @@ function App() {
             treadmill={treadmill}
             treadmillSpeed={treadmillSpeed}
             captureImages={captureImages}
+            memo={memo}
+            onSave={records.add}
           />
         )}
+
+        <Records records={records.records} onRemove={records.remove} />
       </main>
 
       <footer className="app__footer">
         <p className="hint">
-          {view === 'sagittal' ? (
-            <>
-              측면 촬영: 환자의 옆모습이 프레임에 온전히 들어오도록, 카메라를 허리 높이 정도에
-              고정하고 5~10걸음 걷는 모습을 촬영하세요. 관절 각도·보폭·케이던스를 분석합니다.
-            </>
-          ) : (
-            <>
-              후면/정면 촬영: 카메라를 환자의 정후면에 수직으로 두고 걷는(또는 러닝머신 위) 모습을
-              촬영하세요. 무릎 외반·회내·골반 하강·몸통 흔들림을 분석합니다. 케이던스·보폭은 측면
-              촬영이 더 정확합니다.
-            </>
-          )}{' '}
-          절대 거리(cm)는 카메라 보정 없이는 제공하지 않으며, 상대적 지표만 표시합니다.
+          모든 분석은 브라우저 안에서만 처리되며 영상은 서버로 전송·저장되지 않습니다. 측면은 절대
+          거리(cm) 대신 상대 지표를, 러닝머신에서는 벨트 속도 입력 시 절대 보폭(cm)을 제공합니다.
         </p>
         <ReferencesSection />
       </footer>

@@ -4,8 +4,10 @@ import { useGaitSession } from '../hooks/useGaitSession'
 import { GaitCharts, GaitReport } from './GaitReport'
 import { FrontalReport } from './FrontalReport'
 import { CaptureStrip } from './CaptureStrip'
+import { SaveResultButton } from './SaveResultButton'
 import { buildSagittalFrames, summarizeSagittal } from '../lib/gaitMetrics'
 import { summarizeFrontal } from '../lib/frontalMetrics'
+import { frontalMetricList, sagittalMetrics, type RecordInput } from '../lib/records'
 import type { ViewMode } from '../lib/rawFrame'
 import type { PoseModel } from '../lib/pose'
 
@@ -16,9 +18,20 @@ interface Props {
   treadmill: boolean
   treadmillSpeed: number
   captureImages: boolean
+  memo: string
+  onSave: (r: RecordInput) => void
 }
 
-export function VideoUpload({ view, model, swapSides, treadmill, treadmillSpeed, captureImages }: Props) {
+export function VideoUpload({
+  view,
+  model,
+  swapSides,
+  treadmill,
+  treadmillSpeed,
+  captureImages,
+  memo,
+  onSave,
+}: Props) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [srcUrl, setSrcUrl] = useState<string | null>(null)
@@ -93,12 +106,22 @@ export function VideoUpload({ view, model, swapSides, treadmill, treadmillSpeed,
           <GaitReport frames={buildSagittalFrames(frames, swapSides)} summary={sagittalSummary} />
           <CaptureStrip snapshots={snapshots} />
           <GaitCharts frames={buildSagittalFrames(frames, swapSides)} />
+          <SaveResultButton
+            onSave={() =>
+              onSave({ memo, view, treadmill, metrics: sagittalMetrics(sagittalSummary) })
+            }
+          />
         </>
       )}
       {frontalSummary && (
         <>
           <FrontalReport summary={frontalSummary} />
           <CaptureStrip snapshots={snapshots} />
+          <SaveResultButton
+            onSave={() =>
+              onSave({ memo, view, treadmill, metrics: frontalMetricList(frontalSummary) })
+            }
+          />
         </>
       )}
     </div>

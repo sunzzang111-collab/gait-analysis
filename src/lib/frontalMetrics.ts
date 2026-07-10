@@ -29,6 +29,24 @@ export interface FrontalFrame {
   trunkLean: number
   /** Ankle horizontal separation ÷ shoulder width (dimensionless base-of-support proxy). */
   stepWidthRel: number
+  /** Foot progression angle, degrees. + = out-toeing (toe away from midline), − = in-toeing. */
+  fpaLeft: number
+  fpaRight: number
+}
+
+/**
+ * Foot progression angle: deviation of the foot's long axis (heel→toe) from the
+ * line of progression (image vertical). Signed by whether the toe points away
+ * from the body midline (out-toeing, +) or toward it (in-toeing, −).
+ */
+function footProgression(heel: Point2D, toe: Point2D, midX: number): number {
+  const dx = toe.x - heel.x
+  const dy = toe.y - heel.y
+  const len = Math.hypot(dx, dy)
+  if (len < 1e-4) return NaN
+  const mag = (Math.acos(Math.min(1, Math.abs(dy) / len)) * 180) / Math.PI
+  const away = Math.sign(heel.x - midX) === Math.sign(dx)
+  return away ? mag : -mag
 }
 
 function midpoint(a: Point2D, b: Point2D): Point2D {
@@ -102,6 +120,10 @@ export function computeFrontalFrame(lm: Landmark[], t: number, swapSides: boolea
   const pelvicObliquity = tiltFromHorizontal(hipL, hipR)
   const trunkLean = trunkLeanDeg(midpoint(hipL, hipR), midpoint(shoulderL, shoulderR))
   const stepWidthRel = Math.abs(ankleL.x - ankleR.x) / shoulderWidth
+  const footL = lm[LM.LEFT_FOOT_INDEX]
+  const footR = lm[LM.RIGHT_FOOT_INDEX]
+  const fpaLeft = footL ? footProgression(heelL, footL, midX) : NaN
+  const fpaRight = footR ? footProgression(heelR, footR, midX) : NaN
 
   const frame: FrontalFrame = {
     t,
@@ -112,6 +134,8 @@ export function computeFrontalFrame(lm: Landmark[], t: number, swapSides: boolea
     pelvicObliquity,
     trunkLean,
     stepWidthRel,
+    fpaLeft,
+    fpaRight,
   }
   if (!swapSides) return frame
   return {
@@ -122,6 +146,8 @@ export function computeFrontalFrame(lm: Landmark[], t: number, swapSides: boolea
     rearfootR: frame.rearfootL,
     pelvicObliquity: -frame.pelvicObliquity,
     trunkLean: -frame.trunkLean,
+    fpaLeft: frame.fpaRight,
+    fpaRight: frame.fpaLeft,
   }
 }
 
@@ -138,6 +164,8 @@ export interface FrontalSummary {
   trunkLeanPeak: number | null
   /** Mean base-of-support (ankle sep ÷ shoulder width). */
   stepWidthRelMean: number | null
+  /** Foot progression angle, median over the trial (+ out-toeing, − in-toeing). */
+  footProgression: { left: number | null; right: number | null }
 }
 
 // Robust "peak" = 90th percentile after smoothing, so a single jittery frame
@@ -172,6 +200,9 @@ export function summarizeFrontal(raw: RawFrame[], swapSides: boolean): FrontalSu
   const rearL = robustPeak(frames.map((f) => f.rearfootL))
   const rearR = robustPeak(frames.map((f) => f.rearfootR))
   const leansSmooth = movingAverage(frames.map((f) => f.trunkLean), 5).filter((v) => Number.isFinite(v))
+  // Foot progression: median (robust to swing-phase noise) of the signed per-frame angle.
+  const fpaL = percentile(frames.map((f) => f.fpaLeft), 50)
+  const fpaR = percentile(frames.map((f) => f.fpaRight), 50)
 
   return {
     durationSec,
@@ -181,5 +212,6 @@ export function summarizeFrontal(raw: RawFrame[], swapSides: boolean): FrontalSu
     trunkSwayRange: leansSmooth.length ? Math.max(...leansSmooth) - Math.min(...leansSmooth) : null,
     trunkLeanPeak: robustPeakAbs(frames.map((f) => f.trunkLean)),
     stepWidthRelMean: meanOf(frames.map((f) => f.stepWidthRel)),
+    footProgression: { left: fpaL, right: fpaR },
   }
 }
