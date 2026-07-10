@@ -1,6 +1,7 @@
 import type { FrontalSummary } from '../lib/frontalMetrics'
 import { THRESHOLDS, type Threshold } from '../lib/references'
 import { RangeBar, lowerIsBetterStops } from './RangeBar'
+import { FrontalExplainer } from './FrontalExplainer'
 
 function fmtDeg(v: number | null): string {
   return v == null ? '측정 불가' : `${v.toFixed(1)}°`
@@ -109,6 +110,8 @@ export function FrontalReport({ summary }: { summary: FrontalSummary }) {
       <p className="hint" style={{ textAlign: 'left', marginTop: '6px' }}>
         각 값 아래 막대는 정상(초록)·주의(노랑)·확인(빨강) 구간이며, 세로선이 측정값 위치입니다.
       </p>
+
+      <FrontalExplainer />
 
       <ul className="metric-notes">
         <li>{pd.note}</li>
