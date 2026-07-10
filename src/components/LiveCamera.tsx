@@ -8,8 +8,16 @@ import { FrontalReport } from './FrontalReport'
 import { buildSagittalFrames, summarizeSagittal } from '../lib/gaitMetrics'
 import { summarizeFrontal } from '../lib/frontalMetrics'
 import type { ViewMode } from '../lib/rawFrame'
+import type { PoseModel } from '../lib/pose'
 
-export function LiveCamera({ view, swapSides }: { view: ViewMode; swapSides: boolean }) {
+interface Props {
+  view: ViewMode
+  model: PoseModel
+  swapSides: boolean
+  treadmill: boolean
+}
+
+export function LiveCamera({ view, model, swapSides, treadmill }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [streaming, setStreaming] = useState(false)
@@ -20,6 +28,7 @@ export function LiveCamera({ view, swapSides }: { view: ViewMode; swapSides: boo
     videoRef,
     canvasRef,
     view,
+    model,
     swapSides,
     recording,
     active: streaming,
@@ -55,7 +64,8 @@ export function LiveCamera({ view, swapSides }: { view: ViewMode; swapSides: boo
   }
 
   const done = !recording && frames.length > 0
-  const sagittalSummary = done && view === 'sagittal' ? summarizeSagittal(frames, swapSides) : null
+  const sagittalSummary =
+    done && view === 'sagittal' ? summarizeSagittal(frames, swapSides, { treadmill }) : null
   const frontalSummary = done && view === 'frontal' ? summarizeFrontal(frames, swapSides) : null
 
   return (

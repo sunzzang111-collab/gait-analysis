@@ -1,5 +1,16 @@
 import { LM, angleAt, type Point2D } from './landmarks'
-import type { RawFrame } from './rawFrame'
+import { landmarksVisible, type Landmark, type RawFrame } from './rawFrame'
+import { movingAverage } from './stats'
+
+// Core leg landmarks required to trust a sagittal frame.
+const SAGITTAL_CORE = [
+  LM.LEFT_HIP,
+  LM.RIGHT_HIP,
+  LM.LEFT_KNEE,
+  LM.RIGHT_KNEE,
+  LM.LEFT_ANKLE,
+  LM.RIGHT_ANKLE,
+]
 
 export interface JointAngles {
   leftKnee: number
@@ -26,11 +37,12 @@ export interface GaitFrame {
  * MediaPipe's anatomical left/right is flipped relative to the viewer.
  */
 export function computeJointAngles(
-  landmarks: Point2D[],
+  landmarks: Landmark[],
   swapSides: boolean,
 ): JointAngles | null {
   const get = (i: number) => landmarks[i]
-  if (!get(LM.LEFT_HIP) || !get(LM.RIGHT_ANKLE)) return null
+  // Skip frames where the core leg landmarks are occluded / low-confidence.
+  if (!landmarksVisible(landmarks, SAGITTAL_CORE)) return null
 
   const leftKnee = angleAt(get(LM.LEFT_HIP), get(LM.LEFT_KNEE), get(LM.LEFT_ANKLE))
   const rightKnee = angleAt(get(LM.RIGHT_HIP), get(LM.RIGHT_KNEE), get(LM.RIGHT_ANKLE))
@@ -52,7 +64,7 @@ export function computeJointAngles(
 }
 
 export function buildFrame(
-  landmarks: Point2D[],
+  landmarks: Landmark[],
   t: number,
   swapSides: boolean,
 ): GaitFrame | null {
@@ -70,18 +82,31 @@ interface StepEvent {
   x: number
 }
 
-/** Finds local maxima (image-y, i.e. foot-near-ground moments) with a refractory gap. */
+/**
+ * Detects foot-contact events as local maxima of the (smoothed) ankle image-y
+ * — the foot is lowest in the frame near ground contact. A prominence floor
+ * rejects jitter peaks, and a refractory gap prevents double-counting.
+ */
 function detectStepEvents(
   frames: GaitFrame[],
   side: 'leftAnkle' | 'rightAnkle',
-  minGapSec = 0.25,
+  minGapSec = 0.28,
 ): StepEvent[] {
-  const ys = frames.map((f) => f[side].y)
+  const rawYs = frames.map((f) => f[side].y)
+  const ys = movingAverage(rawYs, 5)
+  const finite = ys.filter((v) => Number.isFinite(v))
+  if (finite.length < 3) return []
+  const range = Math.max(...finite) - Math.min(...finite)
+  const prominence = range * 0.15 // ignore peaks shallower than 15% of the signal range
+
   const events: StepEvent[] = []
   let lastT = -Infinity
   for (let i = 1; i < ys.length - 1; i++) {
+    if (!Number.isFinite(ys[i])) continue
     const isPeak = ys[i] >= ys[i - 1] && ys[i] >= ys[i + 1]
-    if (isPeak && frames[i].t - lastT >= minGapSec) {
+    const localMin = Math.min(ys[Math.max(0, i - 4)], ys[Math.min(ys.length - 1, i + 4)])
+    const prominent = ys[i] - localMin >= prominence
+    if (isPeak && prominent && frames[i].t - lastT >= minGapSec) {
       events.push({ t: frames[i].t, x: frames[i][side].x })
       lastT = frames[i].t
     }
@@ -102,6 +127,8 @@ export interface GaitSummary {
     right: number | null
     symmetryPct: number | null
   }
+  /** False on a treadmill: optical step length is not measurable when the subject stays in place. */
+  stepLengthMeasurable: boolean
   romSymmetryPct: {
     knee: number | null
     hip: number | null
@@ -141,7 +168,12 @@ function rangeOf(frames: GaitFrame[], pick: (a: JointAngles) => number): number 
   return Math.max(...vals) - Math.min(...vals)
 }
 
-export function summarize(frames: GaitFrame[]): GaitSummary | null {
+export interface SagittalOptions {
+  /** On a treadmill the subject stays in place, so optical step length is suppressed. */
+  treadmill?: boolean
+}
+
+export function summarize(frames: GaitFrame[], opts: SagittalOptions = {}): GaitSummary | null {
   if (frames.length < 4) return null
   const durationSec = frames[frames.length - 1].t - frames[0].t
   if (durationSec <= 0) return null
@@ -154,6 +186,8 @@ export function summarize(frames: GaitFrame[]): GaitSummary | null {
   const leftStepTimeSec = avgGap(leftEvents)
   const rightStepTimeSec = avgGap(rightEvents)
 
+  // Optical step length relies on horizontal foot travel, which is ~0 on a treadmill.
+  const stepLengthMeasurable = !opts.treadmill
   const legScale = mean(frames.map((f) => f.legScale)) || 1
   const leftStepDist = mean(
     leftEvents.slice(1).map((e, i) => Math.abs(e.x - leftEvents[i].x)),
@@ -161,8 +195,8 @@ export function summarize(frames: GaitFrame[]): GaitSummary | null {
   const rightStepDist = mean(
     rightEvents.slice(1).map((e, i) => Math.abs(e.x - rightEvents[i].x)),
   )
-  const relLeft = leftStepDist != null ? leftStepDist / legScale : null
-  const relRight = rightStepDist != null ? rightStepDist / legScale : null
+  const relLeft = stepLengthMeasurable && leftStepDist != null ? leftStepDist / legScale : null
+  const relRight = stepLengthMeasurable && rightStepDist != null ? rightStepDist / legScale : null
 
   const rom = {
     leftKnee: rangeOf(frames, (a) => a.leftKnee),
@@ -186,6 +220,7 @@ export function summarize(frames: GaitFrame[]): GaitSummary | null {
       right: relRight,
       symmetryPct: symmetryPct(relLeft, relRight),
     },
+    stepLengthMeasurable,
     romSymmetryPct: {
       knee: symmetryPct(rom.leftKnee, rom.rightKnee),
       hip: symmetryPct(rom.leftHip, rom.rightHip),
@@ -203,6 +238,10 @@ export function buildSagittalFrames(raw: RawFrame[], swapSides: boolean): GaitFr
 }
 
 /** Summarize the sagittal metrics directly from raw captured landmarks. */
-export function summarizeSagittal(raw: RawFrame[], swapSides: boolean): GaitSummary | null {
-  return summarize(buildSagittalFrames(raw, swapSides))
+export function summarizeSagittal(
+  raw: RawFrame[],
+  swapSides: boolean,
+  opts: SagittalOptions = {},
+): GaitSummary | null {
+  return summarize(buildSagittalFrames(raw, swapSides), opts)
 }

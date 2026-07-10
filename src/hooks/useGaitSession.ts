@@ -1,15 +1,17 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { DrawingUtils, PoseLandmarker } from '@mediapipe/tasks-vision'
-import { getPoseLandmarker } from '../lib/pose'
+import { getPoseLandmarker, type PoseModel } from '../lib/pose'
 import { computeJointAngles, type JointAngles } from '../lib/gaitMetrics'
 import { computeFrontalFrame, type FrontalFrame } from '../lib/frontalMetrics'
-import type { RawFrame, ViewMode } from '../lib/rawFrame'
+import type { Landmark, RawFrame, ViewMode } from '../lib/rawFrame'
 
 interface Options {
   videoRef: React.RefObject<HTMLVideoElement | null>
   canvasRef: React.RefObject<HTMLCanvasElement | null>
   /** Which plane is being filmed. */
   view: ViewMode
+  /** Pose model quality (accuracy vs speed). */
+  model: PoseModel
   /** Correct for a mirrored (selfie-mode) camera feed. */
   swapSides: boolean
   /** While true, detected frames are appended to the session buffer. */
@@ -18,7 +20,15 @@ interface Options {
   active: boolean
 }
 
-export function useGaitSession({ videoRef, canvasRef, view, swapSides, recording, active }: Options) {
+export function useGaitSession({
+  videoRef,
+  canvasRef,
+  view,
+  model,
+  swapSides,
+  recording,
+  active,
+}: Options) {
   const [ready, setReady] = useState(false)
   const [liveSagittal, setLiveSagittal] = useState<JointAngles | null>(null)
   const [liveFrontal, setLiveFrontal] = useState<FrontalFrame | null>(null)
@@ -52,7 +62,7 @@ export function useGaitSession({ videoRef, canvasRef, view, swapSides, recording
       const video = videoRef.current
       const canvas = canvasRef.current
       if (video && canvas && video.videoWidth > 0) {
-        const landmarker = await getPoseLandmarker()
+        const landmarker = await getPoseLandmarker(model)
         const result = landmarker.detectForVideo(video, performance.now())
         const ctx = canvas.getContext('2d')
         if (ctx) {
@@ -63,27 +73,28 @@ export function useGaitSession({ videoRef, canvasRef, view, swapSides, recording
           ctx.save()
           ctx.clearRect(0, 0, canvas.width, canvas.height)
           const drawer = new DrawingUtils(ctx)
-          const landmarks = result.landmarks[0]
-          if (landmarks) {
-            drawer.drawConnectors(landmarks, PoseLandmarker.POSE_CONNECTIONS, {
+          const raw = result.landmarks[0]
+          if (raw) {
+            drawer.drawConnectors(raw, PoseLandmarker.POSE_CONNECTIONS, {
               color: '#22d3ee',
               lineWidth: 3,
             })
-            drawer.drawLandmarks(landmarks, { color: '#f97316', radius: 3 })
+            drawer.drawLandmarks(raw, { color: '#f97316', radius: 3 })
 
             if (recordStartRef.current === null) recordStartRef.current = video.currentTime
             const t = video.currentTime - recordStartRef.current
+            const lm: Landmark[] = raw.map((p) => ({ x: p.x, y: p.y, v: p.visibility ?? 1 }))
 
             if (view === 'sagittal') {
-              const angles = computeJointAngles(landmarks, swapSides)
+              const angles = computeJointAngles(lm, swapSides)
               if (angles) setLiveSagittal(angles)
             } else {
-              const ff = computeFrontalFrame(landmarks, t, swapSides)
+              const ff = computeFrontalFrame(lm, t, swapSides)
               if (ff) setLiveFrontal(ff)
             }
 
             if (recording) {
-              framesRef.current.push({ t, lm: landmarks.map((p) => ({ x: p.x, y: p.y })) })
+              framesRef.current.push({ t, lm })
               setFrameCount(framesRef.current.length)
             }
           }
@@ -98,7 +109,7 @@ export function useGaitSession({ videoRef, canvasRef, view, swapSides, recording
       stopped = true
       if (rafRef.current) cancelAnimationFrame(rafRef.current)
     }
-  }, [ready, active, recording, view, swapSides, videoRef, canvasRef])
+  }, [ready, active, recording, view, model, swapSides, videoRef, canvasRef])
 
   return {
     ready,

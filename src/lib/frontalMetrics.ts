@@ -1,5 +1,16 @@
 import { LM, angleAt, type Point2D } from './landmarks'
-import type { RawFrame } from './rawFrame'
+import { landmarksVisible, type Landmark, type RawFrame } from './rawFrame'
+import { movingAverage, percentile, meanOf } from './stats'
+
+// Landmarks that must be visible to trust a frontal-plane frame.
+const FRONTAL_CORE = [
+  LM.LEFT_HIP,
+  LM.RIGHT_HIP,
+  LM.LEFT_KNEE,
+  LM.RIGHT_KNEE,
+  LM.LEFT_ANKLE,
+  LM.RIGHT_ANKLE,
+]
 
 // Frontal-plane (front/rear view) gait measures. Image coords are normalized
 // with x to the right and y downward, so "vertical, downward" is (0, +1).
@@ -65,7 +76,8 @@ function signedKneeValgus(hip: Point2D, knee: Point2D, ankle: Point2D, midX: num
   return towardMid ? magnitude : -magnitude
 }
 
-export function computeFrontalFrame(lm: Point2D[], t: number, swapSides: boolean): FrontalFrame | null {
+export function computeFrontalFrame(lm: Landmark[], t: number, swapSides: boolean): FrontalFrame | null {
+  if (!landmarksVisible(lm, FRONTAL_CORE)) return null
   const shoulderL = lm[LM.LEFT_SHOULDER]
   const shoulderR = lm[LM.RIGHT_SHOULDER]
   const hipL = lm[LM.LEFT_HIP]
@@ -128,22 +140,15 @@ export interface FrontalSummary {
   stepWidthRelMean: number | null
 }
 
-function peakPositive(xs: number[]): number | null {
-  const valid = xs.filter((x) => Number.isFinite(x))
-  if (!valid.length) return null
-  return Math.max(...valid)
+// Robust "peak" = 90th percentile after smoothing, so a single jittery frame
+// can't inflate the reported value. Applied to positive-direction series.
+function robustPeak(xs: number[]): number | null {
+  return percentile(movingAverage(xs, 5), 90)
 }
 
-function peakAbs(xs: number[]): number | null {
-  const valid = xs.filter((x) => Number.isFinite(x)).map(Math.abs)
-  if (!valid.length) return null
-  return Math.max(...valid)
-}
-
-function mean(xs: number[]): number | null {
-  const valid = xs.filter((x) => Number.isFinite(x))
-  if (!valid.length) return null
-  return valid.reduce((a, b) => a + b, 0) / valid.length
+/** Robust peak of |x|: smooth, take magnitude, then 90th percentile. */
+function robustPeakAbs(xs: number[]): number | null {
+  return percentile(movingAverage(xs, 5).map((v) => (Number.isFinite(v) ? Math.abs(v) : NaN)), 90)
 }
 
 function symmetryPct(l: number | null, r: number | null): number | null {
@@ -162,21 +167,19 @@ export function summarizeFrontal(raw: RawFrame[], swapSides: boolean): FrontalSu
   if (frames.length < 3) return null
   const durationSec = frames[frames.length - 1].t - frames[0].t
 
-  const valgusL = peakPositive(frames.map((f) => f.kneeValgusL))
-  const valgusR = peakPositive(frames.map((f) => f.kneeValgusR))
-  const rearL = peakPositive(frames.map((f) => f.rearfootL))
-  const rearR = peakPositive(frames.map((f) => f.rearfootR))
+  const valgusL = robustPeak(frames.map((f) => f.kneeValgusL))
+  const valgusR = robustPeak(frames.map((f) => f.kneeValgusR))
+  const rearL = robustPeak(frames.map((f) => f.rearfootL))
+  const rearR = robustPeak(frames.map((f) => f.rearfootR))
+  const leansSmooth = movingAverage(frames.map((f) => f.trunkLean), 5).filter((v) => Number.isFinite(v))
 
   return {
     durationSec,
     peakValgus: { left: valgusL, right: valgusR, symmetryPct: symmetryPct(valgusL, valgusR) },
     peakRearfoot: { left: rearL, right: rearR, symmetryPct: symmetryPct(rearL, rearR) },
-    pelvicDropPeak: peakAbs(frames.map((f) => f.pelvicObliquity)),
-    trunkSwayRange: (() => {
-      const leans = frames.map((f) => f.trunkLean).filter((v) => Number.isFinite(v))
-      return leans.length ? Math.max(...leans) - Math.min(...leans) : null
-    })(),
-    trunkLeanPeak: peakAbs(frames.map((f) => f.trunkLean)),
-    stepWidthRelMean: mean(frames.map((f) => f.stepWidthRel)),
+    pelvicDropPeak: robustPeakAbs(frames.map((f) => f.pelvicObliquity)),
+    trunkSwayRange: leansSmooth.length ? Math.max(...leansSmooth) - Math.min(...leansSmooth) : null,
+    trunkLeanPeak: robustPeakAbs(frames.map((f) => f.trunkLean)),
+    stepWidthRelMean: meanOf(frames.map((f) => f.stepWidthRel)),
   }
 }

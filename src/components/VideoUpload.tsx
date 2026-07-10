@@ -6,8 +6,16 @@ import { FrontalReport } from './FrontalReport'
 import { buildSagittalFrames, summarizeSagittal } from '../lib/gaitMetrics'
 import { summarizeFrontal } from '../lib/frontalMetrics'
 import type { ViewMode } from '../lib/rawFrame'
+import type { PoseModel } from '../lib/pose'
 
-export function VideoUpload({ view, swapSides }: { view: ViewMode; swapSides: boolean }) {
+interface Props {
+  view: ViewMode
+  model: PoseModel
+  swapSides: boolean
+  treadmill: boolean
+}
+
+export function VideoUpload({ view, model, swapSides, treadmill }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [srcUrl, setSrcUrl] = useState<string | null>(null)
@@ -19,6 +27,7 @@ export function VideoUpload({ view, swapSides }: { view: ViewMode; swapSides: bo
     videoRef,
     canvasRef,
     view,
+    model,
     swapSides,
     recording,
     active: playing,
@@ -51,7 +60,8 @@ export function VideoUpload({ view, swapSides }: { view: ViewMode; swapSides: bo
   }
 
   const ready2 = done && frames.length > 0
-  const sagittalSummary = ready2 && view === 'sagittal' ? summarizeSagittal(frames, swapSides) : null
+  const sagittalSummary =
+    ready2 && view === 'sagittal' ? summarizeSagittal(frames, swapSides, { treadmill }) : null
   const frontalSummary = ready2 && view === 'frontal' ? summarizeFrontal(frames, swapSides) : null
 
   return (
