@@ -42,9 +42,13 @@ function FrontalDiagram() {
   )
 }
 
-const CONTENT: Record<ViewMode, { title: string; steps: string[]; measures: string }> = {
+const CONTENT: Record<
+  ViewMode,
+  { title: string; orientation: string; steps: string[]; measures: string }
+> = {
   sagittal: {
     title: '측면(옆모습) 촬영 방법',
+    orientation: '📱 가로(landscape)로 촬영 — 걷는 경로를 넓게 담아 여러 걸음이 들어오게',
     steps: [
       '카메라(휴대폰/태블릿)를 환자 옆 3~4m에 삼각대 등으로 고정. 렌즈 높이는 허리 정도.',
       '따라가지 말고 고정한 채로, 환자가 카메라 앞을 가로질러 5~10걸음 자연스럽게 걷게 합니다.',
@@ -55,6 +59,7 @@ const CONTENT: Record<ViewMode, { title: string; steps: string[]; measures: stri
   },
   frontal: {
     title: '후면/정면 촬영 방법',
+    orientation: '📱 세로(portrait)로 촬영 — 머리~발끝 전신이 크고 온전하게 들어오게',
     steps: [
       '카메라를 환자의 정후면(또는 정면)에 똑바로 고정. 무릎~어깨가 프레임에 들어오게 합니다.',
       '지상 촬영이면 환자가 카메라에서 멀어지며 5~8걸음 걷습니다(멀어질수록 작아져 정확도가 떨어집니다).',
@@ -73,6 +78,7 @@ export function ShootingGuide({ view }: { view: ViewMode }) {
       <div className="guide__body">
         <div className="guide__text">
           <strong>{c.title}</strong>
+          <p className="guide__orientation">{c.orientation}</p>
           <ol>
             {c.steps.map((s, i) => (
               <li key={i}>{s}</li>
