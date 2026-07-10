@@ -4,6 +4,8 @@
 업로드한 영상에서 사람의 관절 위치를 추정하고, 관절 각도 · 좌우 대칭성 ·
 케이던스(보행 주기) 등을 계산해 화면에 보여줍니다.
 
+**▶ 실행 주소: https://sunzzang111-collab.github.io/gait-analysis/**
+
 > **참고용 소프트웨어입니다.** 의료기기가 아니며 진단 목적으로 사용할 수 없습니다.
 > 모든 수치는 의료진의 임상적 판단을 보조하는 참고 자료로만 사용하세요.
 
@@ -47,6 +49,11 @@ npm run dev      # 개발 서버
 npm run build    # 프로덕션 빌드
 npm run preview  # 빌드 결과 미리보기
 ```
+
+## 배포
+
+기본 브랜치에 푸시하면 GitHub Actions(`.github/workflows/deploy.yml`)가 빌드 후
+GitHub Pages로 자동 배포합니다. (저장소 Settings → Pages → Source: "GitHub Actions")
 
 ## 기술 스택
 
