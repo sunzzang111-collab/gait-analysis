@@ -1,11 +1,13 @@
 import { useState } from 'react'
 import { LiveCamera } from './components/LiveCamera'
 import { VideoUpload } from './components/VideoUpload'
+import type { ViewMode } from './lib/rawFrame'
 
 type Mode = 'live' | 'upload'
 
 function App() {
   const [mode, setMode] = useState<Mode>('live')
+  const [view, setView] = useState<ViewMode>('sagittal')
   const [swapSides, setSwapSides] = useState(false)
 
   return (
@@ -36,15 +38,39 @@ function App() {
         </label>
       </nav>
 
+      <div className="view-switch">
+        <span className="view-switch__label">촬영 방향</span>
+        <button className={view === 'sagittal' ? 'active' : ''} onClick={() => setView('sagittal')}>
+          측면 (옆모습)
+        </button>
+        <button className={view === 'frontal' ? 'active' : ''} onClick={() => setView('frontal')}>
+          후면/정면
+        </button>
+      </div>
+
       <main>
-        {mode === 'live' ? <LiveCamera swapSides={swapSides} /> : <VideoUpload swapSides={swapSides} />}
+        {mode === 'live' ? (
+          <LiveCamera view={view} swapSides={swapSides} />
+        ) : (
+          <VideoUpload view={view} swapSides={swapSides} />
+        )}
       </main>
 
       <footer className="app__footer">
         <p className="hint">
-          권장 촬영: 환자의 옆모습(측면)이 프레임에 온전히 들어오도록, 카메라를 허리 높이 정도에
-          고정하고 5~10걸음 정도 걷는 모습을 촬영하세요. 절대 거리(cm 단위 보폭 등)는 카메라
-          보정 없이는 제공하지 않으며, 상대적 지표만 표시합니다.
+          {view === 'sagittal' ? (
+            <>
+              측면 촬영: 환자의 옆모습이 프레임에 온전히 들어오도록, 카메라를 허리 높이 정도에
+              고정하고 5~10걸음 걷는 모습을 촬영하세요. 관절 각도·보폭·케이던스를 분석합니다.
+            </>
+          ) : (
+            <>
+              후면/정면 촬영: 카메라를 환자의 정후면에 수직으로 두고 걷는(또는 러닝머신 위) 모습을
+              촬영하세요. 무릎 외반·회내·골반 하강·몸통 흔들림을 분석합니다. 러닝머신에서는 케이던스는
+              측면 촬영에서 측정하는 것이 정확합니다.
+            </>
+          )}{' '}
+          절대 거리(cm)는 카메라 보정 없이는 제공하지 않으며, 상대적 지표만 표시합니다.
         </p>
       </footer>
     </div>

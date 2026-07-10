@@ -78,6 +78,38 @@ body {
   gap: 6px;
 }
 
+.view-switch {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: -6px 0 20px;
+  flex-wrap: wrap;
+}
+
+.view-switch__label {
+  font-size: 0.82rem;
+  color: var(--muted);
+  margin-right: 4px;
+}
+
+.view-switch button {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 6px 14px;
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.view-switch button.active {
+  background: rgba(34, 211, 238, 0.15);
+  border-color: var(--accent);
+  color: var(--accent);
+  font-weight: 600;
+}
+
 .panel {
   background: var(--panel);
   border: 1px solid var(--border);

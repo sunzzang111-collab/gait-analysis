@@ -2,9 +2,12 @@ import { useRef, useState } from 'react'
 import { VideoStage } from './VideoStage'
 import { useGaitSession } from '../hooks/useGaitSession'
 import { GaitCharts, GaitReport } from './GaitReport'
-import { summarize } from '../lib/gaitMetrics'
+import { FrontalReport } from './FrontalReport'
+import { buildSagittalFrames, summarizeSagittal } from '../lib/gaitMetrics'
+import { summarizeFrontal } from '../lib/frontalMetrics'
+import type { ViewMode } from '../lib/rawFrame'
 
-export function VideoUpload({ swapSides }: { swapSides: boolean }) {
+export function VideoUpload({ view, swapSides }: { view: ViewMode; swapSides: boolean }) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [srcUrl, setSrcUrl] = useState<string | null>(null)
@@ -15,6 +18,7 @@ export function VideoUpload({ swapSides }: { swapSides: boolean }) {
   const { ready, frames, resetFrames } = useGaitSession({
     videoRef,
     canvasRef,
+    view,
     swapSides,
     recording,
     active: playing,
@@ -46,7 +50,9 @@ export function VideoUpload({ swapSides }: { swapSides: boolean }) {
     setDone(true)
   }
 
-  const summary = done && frames.length > 0 ? summarize(frames) : null
+  const ready2 = done && frames.length > 0
+  const sagittalSummary = ready2 && view === 'sagittal' ? summarizeSagittal(frames, swapSides) : null
+  const frontalSummary = ready2 && view === 'frontal' ? summarizeFrontal(frames, swapSides) : null
 
   return (
     <div className="panel">
@@ -66,12 +72,13 @@ export function VideoUpload({ swapSides }: { swapSides: boolean }) {
           {!ready && <p className="hint">분석 모델을 불러오는 중입니다...</p>}
         </>
       )}
-      {summary && (
+      {sagittalSummary && (
         <>
-          <GaitReport frames={frames} summary={summary} />
-          <GaitCharts frames={frames} />
+          <GaitReport frames={buildSagittalFrames(frames, swapSides)} summary={sagittalSummary} />
+          <GaitCharts frames={buildSagittalFrames(frames, swapSides)} />
         </>
       )}
+      {frontalSummary && <FrontalReport summary={frontalSummary} />}
     </div>
   )
 }

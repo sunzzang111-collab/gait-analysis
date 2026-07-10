@@ -2,19 +2,24 @@ import { useRef, useState } from 'react'
 import { VideoStage } from './VideoStage'
 import { useGaitSession } from '../hooks/useGaitSession'
 import { MetricsPanel } from './MetricsPanel'
+import { FrontalMetricsPanel } from './FrontalMetricsPanel'
 import { GaitCharts, GaitReport } from './GaitReport'
-import { summarize } from '../lib/gaitMetrics'
+import { FrontalReport } from './FrontalReport'
+import { buildSagittalFrames, summarizeSagittal } from '../lib/gaitMetrics'
+import { summarizeFrontal } from '../lib/frontalMetrics'
+import type { ViewMode } from '../lib/rawFrame'
 
-export function LiveCamera({ swapSides }: { swapSides: boolean }) {
+export function LiveCamera({ view, swapSides }: { view: ViewMode; swapSides: boolean }) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [streaming, setStreaming] = useState(false)
   const [recording, setRecording] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const { ready, liveAngles, frames, frameCount, resetFrames } = useGaitSession({
+  const { ready, liveSagittal, liveFrontal, frames, frameCount, resetFrames } = useGaitSession({
     videoRef,
     canvasRef,
+    view,
     swapSides,
     recording,
     active: streaming,
@@ -49,7 +54,9 @@ export function LiveCamera({ swapSides }: { swapSides: boolean }) {
     setRecording((r) => !r)
   }
 
-  const summary = !recording && frames.length > 0 ? summarize(frames) : null
+  const done = !recording && frames.length > 0
+  const sagittalSummary = done && view === 'sagittal' ? summarizeSagittal(frames, swapSides) : null
+  const frontalSummary = done && view === 'frontal' ? summarizeFrontal(frames, swapSides) : null
 
   return (
     <div className="panel">
@@ -69,13 +76,15 @@ export function LiveCamera({ swapSides }: { swapSides: boolean }) {
       </div>
       {error && <p className="error">{error}</p>}
       {!ready && <p className="hint">분석 모델을 불러오는 중입니다...</p>}
-      {liveAngles && <MetricsPanel angles={liveAngles} />}
-      {summary && (
+      {view === 'sagittal' && liveSagittal && <MetricsPanel angles={liveSagittal} />}
+      {view === 'frontal' && liveFrontal && <FrontalMetricsPanel f={liveFrontal} />}
+      {sagittalSummary && (
         <>
-          <GaitReport frames={frames} summary={summary} />
-          <GaitCharts frames={frames} />
+          <GaitReport frames={buildSagittalFrames(frames, swapSides)} summary={sagittalSummary} />
+          <GaitCharts frames={buildSagittalFrames(frames, swapSides)} />
         </>
       )}
+      {frontalSummary && <FrontalReport summary={frontalSummary} />}
     </div>
   )
 }

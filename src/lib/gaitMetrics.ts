@@ -1,4 +1,5 @@
 import { LM, angleAt, type Point2D } from './landmarks'
+import type { RawFrame } from './rawFrame'
 
 export interface JointAngles {
   leftKnee: number
@@ -192,4 +193,16 @@ export function summarize(frames: GaitFrame[]): GaitSummary | null {
     },
     rom,
   }
+}
+
+/** Builds sagittal GaitFrames from raw captured landmarks. */
+export function buildSagittalFrames(raw: RawFrame[], swapSides: boolean): GaitFrame[] {
+  return raw
+    .map((r) => buildFrame(r.lm, r.t, swapSides))
+    .filter((f): f is GaitFrame => f !== null)
+}
+
+/** Summarize the sagittal metrics directly from raw captured landmarks. */
+export function summarizeSagittal(raw: RawFrame[], swapSides: boolean): GaitSummary | null {
+  return summarize(buildSagittalFrames(raw, swapSides))
 }
