@@ -50,7 +50,8 @@ export function GaitReport({ summary }: { frames: GaitFrame[]; summary: GaitSumm
               { to: CADENCE.normalHigh + 10, tone: 'warn' },
               { to: CADENCE.max, tone: 'bad' },
             ]}
-            legend={`정상 ${CADENCE.normalLow}–${CADENCE.normalHigh} 걸음/분`}
+            tickValues={[CADENCE.normalLow, CADENCE.normalHigh]}
+            legend="가운데 초록이 정상 범위 (걸음/분)"
           />
         </div>
         <div className="summary-card">

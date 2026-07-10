@@ -39,8 +39,9 @@ export function FootReport({ summary }: { summary: FootSummary }) {
           <RangeBar
             value={summary.footProgression.left != null ? Math.abs(summary.footProgression.left) : null}
             max={40}
+            unit="°"
             stops={fpaStops}
-            legend="바깥 벌어짐 정상 ~7° · 과도(>25°)·안쪽(−)은 확인"
+            legend="바깥 벌어짐(정상 ~7°) · 과도(>25°)·안쪽(−)은 확인"
           />
         </div>
         <div className={`summary-card ${fpaTone(summary.footProgression.right)}`}>
@@ -49,8 +50,9 @@ export function FootReport({ summary }: { summary: FootSummary }) {
           <RangeBar
             value={summary.footProgression.right != null ? Math.abs(summary.footProgression.right) : null}
             max={40}
+            unit="°"
             stops={fpaStops}
-            legend="바깥 벌어짐 정상 ~7° · 과도(>25°)·안쪽(−)은 확인"
+            legend="바깥 벌어짐(정상 ~7°) · 과도(>25°)·안쪽(−)은 확인"
           />
         </div>
         <div className="summary-card">
@@ -70,8 +72,9 @@ export function FootReport({ summary }: { summary: FootSummary }) {
           <RangeBar
             value={summary.eversion.left}
             max={rf.max}
+            unit="°"
             stops={lowerIsBetterStops(rf.warn, rf.bad, rf.max)}
-            legend={`정상 <${rf.warn}° · 주의 ${rf.warn}–${rf.bad}° · 확인 >${rf.bad}°`}
+            legend="◀ 정상 · 주의 · 확인 ▶"
           />
         </div>
         <div className={`summary-card ${everTone(summary.eversion.right)}`}>
@@ -82,8 +85,9 @@ export function FootReport({ summary }: { summary: FootSummary }) {
           <RangeBar
             value={summary.eversion.right}
             max={rf.max}
+            unit="°"
             stops={lowerIsBetterStops(rf.warn, rf.bad, rf.max)}
-            legend={`정상 <${rf.warn}° · 주의 ${rf.warn}–${rf.bad}° · 확인 >${rf.bad}°`}
+            legend="◀ 정상 · 주의 · 확인 ▶"
           />
         </div>
         <div className="summary-card">

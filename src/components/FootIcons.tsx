@@ -3,7 +3,7 @@
 /** Top-down foot silhouette (with toes) showing the foot progression angle. */
 export function FootProgressionIcon() {
   return (
-    <svg viewBox="0 0 160 150" role="img" aria-label="발끝 방향(足진행각) 개념도">
+    <svg viewBox="0 0 160 150" role="img" aria-label="발끝 방향(foot progression) 개념도">
       <rect width="160" height="150" fill="#f8f9fb" rx="8" />
       {/* line of progression */}
       <line x1="70" y1="140" x2="70" y2="18" stroke="#94a3b8" strokeWidth="2" strokeDasharray="5 4" />

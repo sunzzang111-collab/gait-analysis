@@ -9,7 +9,7 @@ export function FootExplainer() {
         <figure className="explainer__item">
           <FootProgressionIcon />
           <figcaption>
-            <strong>발끝 방향 (足진행각)</strong>
+            <strong>발끝 방향 (foot progression angle)</strong>
             <span>
               걷는 방향 대비 발끝이 벌어진 각도. 정상은 약간 바깥(~7°). 안쪽으로 모이면
               내족보행(in-toeing), 과도하게 벌어지면 외족보행(out-toeing)으로 봅니다.

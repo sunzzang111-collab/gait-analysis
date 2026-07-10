@@ -53,8 +53,9 @@ function ThreshCard({ label, value, th }: { label: string; value: number | null;
       <RangeBar
         value={value}
         max={th.max}
+        unit="°"
         stops={lowerIsBetterStops(th.warn, th.bad, th.max)}
-        legend={`정상 <${th.warn}° · 주의 ${th.warn}–${th.bad}° · 확인 >${th.bad}°`}
+        legend="◀ 정상 · 주의 · 확인 ▶"
       />
     </div>
   )

@@ -403,14 +403,18 @@ input[type='file'] {
 
 /* Normal-range band (gauge) */
 .rangebar {
-  margin-top: 8px;
+  margin-top: 10px;
 }
 
-.rangebar__track {
+.rangebar__bar {
   position: relative;
+  height: 11px;
+}
+
+.rangebar__zones {
   display: flex;
-  height: 7px;
-  border-radius: 4px;
+  height: 100%;
+  border-radius: 6px;
   overflow: hidden;
   border: 1px solid var(--border);
 }
@@ -419,20 +423,50 @@ input[type='file'] {
   height: 100%;
 }
 
+/* Lollipop pin marking the measured value */
 .rangebar__marker {
   position: absolute;
-  top: -3px;
-  width: 2px;
+  top: -5px;
+  width: 3px;
+  height: 21px;
+  background: #0f172a;
+  border-radius: 2px;
+  transform: translateX(-1.5px);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.95);
+}
+
+.rangebar__marker::before {
+  content: '';
+  position: absolute;
+  top: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #0f172a;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.95);
+}
+
+.rangebar__ticks {
+  position: relative;
   height: 13px;
-  background: #111827;
-  transform: translateX(-1px);
-  border-radius: 1px;
+  margin-top: 3px;
+}
+
+.rangebar__tick {
+  position: absolute;
+  transform: translateX(-50%);
+  font-size: 0.64rem;
+  font-weight: 600;
+  color: var(--muted);
+  white-space: nowrap;
 }
 
 .rangebar__legend {
   font-size: 0.68rem;
   color: var(--muted);
-  margin-top: 4px;
+  margin-top: 2px;
 }
 
 /* Shooting guide */
