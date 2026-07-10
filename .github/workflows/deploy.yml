@@ -11,7 +11,9 @@ permissions:
   id-token: write
 
 concurrency:
-  group: pages
+  # Per-branch group so a build-only run on a non-default branch never cancels
+  # the default branch's in-flight deploy.
+  group: pages-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
